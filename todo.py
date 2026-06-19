@@ -3,71 +3,93 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-TASKS_FILE = Path(__file__).parent / "tasks.json"
+DATA_FILE = Path(__file__).parent / "tasks.json"
 
 
-def load_tasks():
-    if not TASKS_FILE.exists():
+def load():
+    if not DATA_FILE.exists():
         return []
-    with open(TASKS_FILE, "r", encoding="utf-8") as f:
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_tasks(tasks):
-    with open(TASKS_FILE, "w", encoding="utf-8") as f:
+def save(tasks):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(tasks, f, indent=2, ensure_ascii=False)
 
 
+def next_id(tasks):
+    return max((t["id"] for t in tasks), default=0) + 1
+
+
 def add(description):
-    tasks = load_tasks()
+    tasks = load()
     task = {
-        "id": len(tasks) + 1 if not tasks else max(t["id"] for t in tasks) + 1,
+        "id": next_id(tasks),
         "description": description,
         "done": False,
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
     }
     tasks.append(task)
-    save_tasks(tasks)
-    print(f"Added: {description}")
+    save(tasks)
+    print(f"[OK] Adaugat: {description}")
 
 
 def list_tasks():
-    tasks = load_tasks()
+    tasks = load()
     if not tasks:
-        print("No tasks.")
+        print("Nu exista cursuri.")
         return
+    print(f"{'ID':>3}  {'Stare':<13}  {'Descriere':<40}  {'Creat'}")
+    print("-" * 70)
     for t in tasks:
-        status = "x" if t["done"] else " "
-        print(f"[{status}] {t['id']:>3}. {t['description']}")
+        stare = "finalizat" if t["done"] else "in asteptare"
+        print(f"{t['id']:>3}  {stare:<13}  {t['description']:<40}  {t['created_at']}")
 
 
-def delete(task_id):
-    tasks = load_tasks()
-    new_tasks = [t for t in tasks if t["id"] != task_id]
-    if len(new_tasks) == len(tasks):
-        print(f"Task {task_id} not found.")
-        return
-    save_tasks(new_tasks)
-    print(f"Deleted task {task_id}.")
+def update(task_id, new_desc):
+    tasks = load()
+    for t in tasks:
+        if t["id"] == task_id:
+            old_desc = t["description"]
+            t["description"] = new_desc
+            save(tasks)
+            print(f"[OK] Curs #{task_id} actualizat:")
+            print(f"      inainte: {old_desc}")
+            print(f"      dupa:    {new_desc}")
+            return
+    print(f"[EROARE] Cursul #{task_id} nu exista.")
 
 
 def done(task_id):
-    tasks = load_tasks()
+    tasks = load()
     for t in tasks:
         if t["id"] == task_id:
             t["done"] = True
-            save_tasks(tasks)
-            print(f"Task {task_id} marked as done.")
+            save(tasks)
+            print(f"[OK] Cursul #{task_id} marcat ca finalizat.")
             return
-    print(f"Task {task_id} not found.")
+    print(f"[EROARE] Cursul #{task_id} nu exista.")
+
+
+def delete(task_id):
+    tasks = load()
+    for t in tasks:
+        if t["id"] == task_id:
+            tasks.remove(t)
+            save(tasks)
+            print(f"[OK] Cursul #{task_id} sters: \"{t['description']}\"")
+            return
+    print(f"[EROARE] Cursul #{task_id} nu exista.")
 
 
 def usage():
-    print("Usage:")
-    print("  python todo.py add <description>")
-    print("  python todo.py list")
-    print("  python todo.py delete <id>")
-    print("  python todo.py done <id>")
+    print("Utilizare:")
+    print("  python todo.py add <descriere>         # adauga curs")
+    print("  python todo.py list                     # listeaza cursuri")
+    print("  python todo.py update <id> <descriere>  # modifica descriere")
+    print("  python todo.py done <id>                # marcheaza finalizat")
+    print("  python todo.py delete <id>              # sterge curs")
 
 
 def main():
@@ -80,10 +102,12 @@ def main():
         add(" ".join(sys.argv[2:]))
     elif cmd == "list":
         list_tasks()
-    elif cmd == "delete" and len(sys.argv) == 3:
-        delete(int(sys.argv[2]))
+    elif cmd == "update" and len(sys.argv) >= 4:
+        update(int(sys.argv[2]), " ".join(sys.argv[3:]))
     elif cmd == "done" and len(sys.argv) == 3:
         done(int(sys.argv[2]))
+    elif cmd == "delete" and len(sys.argv) == 3:
+        delete(int(sys.argv[2]))
     else:
         usage()
 

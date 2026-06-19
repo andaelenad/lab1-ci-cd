@@ -1,0 +1,8 @@
+The quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog
+The sun rises in the east and sets in the west the sun rises in the east and sets in the west
+Hello world this is a test of the word frequency counter hello world this is a test of the word frequency counter
+Python is a powerful programming language python is a powerful programming language
+Data science machine learning and artificial intelligence are transforming the world data science machine learning and artificial intelligence are transforming the world
+The cat sat on the mat the cat sat on the mat the cat sat on the mat
+One two three four five six seven eight nine ten one two three four five six seven eight nine ten
+Repeat repeat repeat repeat repeat this word appears many times
